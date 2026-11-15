@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#101214"><meta name="description" content="Painel compacto de análise de deslocamento na roleta europeia.">
+<title>Roleta Europeia • Deslocamento</title>
+<style>
+:root{color-scheme:dark;--bg:#101214;--panel:#1b1f22;--muted:#9aa3aa;--gold:#ffd54a;--green:#087c45;--red:#c62828;--black:#17191c}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f6f7f8;font:14px system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding:10px}
+main{max-width:560px;margin:auto}.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}.brand{font-weight:900;letter-spacing:.8px;font-size:15px}.brand span{color:var(--gold)}.tag{font-size:10px;color:var(--muted)}
+.result{background:linear-gradient(135deg,#292313,#171a1d);border:1px solid #8e7425;border-radius:12px;padding:10px;margin-bottom:9px}.result-head{display:flex;justify-content:space-between;align-items:center;color:var(--gold);font-weight:800;font-size:12px}.numbers{display:flex;gap:8px;margin-top:8px}.out{flex:1;min-width:0;text-align:center;border-radius:9px;padding:8px 2px;background:#282c30;border:1px solid #444}.out b{display:block;font-size:25px;line-height:1.2}.out small{font-size:9px;color:#c5cbd0}.empty{color:#8b9298;font-size:12px;padding:12px 2px;text-align:center}
+.panel{background:var(--panel);border:1px solid #30363b;border-radius:12px;padding:10px;margin-bottom:9px}.label{font-size:11px;color:var(--muted);font-weight:700;margin-bottom:7px}.slots{display:flex;gap:7px}.slot{flex:1;border:1px dashed #626b72;border-radius:8px;min-height:43px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;color:#fff;background:#121518}.slot.filled{border-style:solid;border-color:#b99530}
+.grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}.num{border:0;border-radius:7px;min-height:34px;color:#fff;font-weight:800;font-size:14px;background:#222;cursor:pointer}.num.red{background:var(--red)}.num.black{background:#08090a;border:1px solid #444}.num.green{background:var(--green)}.num:active{transform:scale(.95)}.num:disabled{opacity:.3}.num.selected{outline:2px solid var(--gold);outline-offset:1px;box-shadow:0 0 10px #ffd54a66}
+.actions{display:flex;gap:7px;margin-top:9px}.btn{flex:1;border:0;border-radius:8px;padding:11px 8px;font-weight:900;font-size:12px;cursor:pointer}.primary{background:var(--gold);color:#171717}.secondary{background:#343a40;color:#fff}.hint{font-size:10px;color:var(--muted);line-height:1.4;margin-top:8px}.detail{font-size:11px;color:#d3d8dc;margin-top:8px;line-height:1.5}.warning{color:#e6c66b}
+@media(max-width:350px){body{padding:6px}.panel{padding:8px}.grid{gap:4px}.num{min-height:30px;font-size:12px}.out b{font-size:21px}.brand{font-size:13px}}
+</style></head>
+<body><main>
+<header class="top"><div class="brand">ROULETTE <span>EUROPEAN</span></div><div class="tag">PAINEL DE DESLOCAMENTO</div></header>
+<section class="result"><div class="result-head"><span>TRÊS NÚMEROS CALCULADOS</span><span id="status">AGUARDANDO</span></div><div id="outputs" class="empty">Selecione três resultados e toque em ANALISAR.</div><div id="detail" class="detail" aria-live="polite"></div></section>
+<section class="panel"><div class="label">ÚLTIMOS 3 RESULTADOS · NA ORDEM DE SAÍDA</div><div class="slots" id="slots"><div class="slot">1</div><div class="slot">2</div><div class="slot">3</div></div></section>
+<section class="panel"><div class="label">TOQUE NOS NÚMEROS DA ROLETA</div><div class="grid" id="grid"></div><div class="actions"><button class="btn primary" id="analyze">ANALISAR</button><button class="btn secondary" id="undo">DESFAZER</button><button class="btn secondary" id="clear">LIMPAR</button></div><div class="hint">Toque em três números na sequência em que saíram. O zero também faz parte da roleta europeia.</div></section>
+<div class="hint warning">Ferramenta matemática experimental: os giros são independentes. Os números calculados não são previsão nem garantia de resultado.</div>
+</main>
+<script>
+const wheel=[0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
+const reds=new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
+let picks=[];
+const grid=document.getElementById('grid'),slots=document.getElementById('slots');
+const colorClass=n=>n===0?'green':reds.has(n)?'red':'black';
+wheel.forEach(n=>{const b=document.createElement('button');b.className='num '+colorClass(n);b.textContent=n;b.type='button';b.dataset.n=n;b.addEventListener('click',()=>{if(picks.length>=3)return;picks.push(n);render();});grid.appendChild(b)});
+function render(){slots.innerHTML='';for(let i=0;i<3;i++){const d=document.createElement('div');d.className='slot'+(picks[i]!==undefined?' filled':'');d.textContent=picks[i]!==undefined?picks[i]:String(i+1);slots.appendChild(d)}
+grid.querySelectorAll('button').forEach(b=>{const n=Number(b.dataset.n);b.disabled=picks.length>=3&&!picks.includes(n);b.classList.toggle('selected',picks.includes(n));});}
+function signed(a,b){let d=(wheel.indexOf(b)-wheel.indexOf(a)+37)%37;if(d>18)d-=37;return d}
+document.getElementById('analyze').addEventListener('click',()=>{if(picks.length!==3){document.getElementById('status').textContent='FALTAM NÚMEROS';document.getElementById('detail').textContent='Selecione exatamente três resultados.';return}
+const d1=signed(picks[0],picks[1]),d2=signed(picks[1],picks[2]);const step=Math.round((d1+d2)/2);let idx=wheel.indexOf(picks[2]);const predicted=[];for(let i=0;i<3;i++){idx=(idx+step+37)%37;predicted.push(wheel[idx]);}
+document.getElementById('status').textContent='ANÁLISE CONCLUÍDA';const out=document.getElementById('outputs');out.className='numbers';out.innerHTML='';predicted.forEach((n,i)=>{const d=document.createElement('div');d.className='out';d.innerHTML='<small>OPÇÃO '+(i+1)+'</small><b></b>';d.querySelector('b').textContent=n;d.querySelector('b').style.color=n===0?'#48df9b':reds.has(n)?'#ff7777':'#fff';out.appendChild(d)});
+document.getElementById('detail').textContent='Deslocamentos físicos: '+d1+' e '+d2+' casas. Passo médio arredondado: '+step+' casa(s). Cálculo aplicado a partir do terceiro resultado ('+picks[2]+').'; não representa probabilidade maior de acerto.';
+});
+document.getElementById('undo').addEventListener('click',()=>{picks.pop();render();});
+document.getElementById('clear').addEventListener('click',()=>{picks=[];render();document.getElementById('status').textContent='AGUARDANDO';document.getElementById('outputs').className='empty';document.getElementById('outputs').textContent='Selecione três resultados e toque em ANALISAR.';document.getElementById('detail').textContent='';});
+render();
+</script></body></html>
